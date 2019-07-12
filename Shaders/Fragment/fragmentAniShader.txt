@@ -1,0 +1,24 @@
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+in vec3 ObjPos;  
+in vec3 Normal;
+
+uniform sampler2D ourTexture;
+
+void main() {
+	vec4 texel= texture(ourTexture, TexCoord);
+	//FragColor = texel * (ObjPos.y  * 0.01);
+	vec3 lightPos = vec3(1000000, 1000000, 1000000);
+	vec3 lightDir = normalize(lightPos - ObjPos);
+	vec3 lightCol = vec3(0.6, 0.5, 0.7);
+	vec3 ambient = vec3(0.5, 0.5, 0.5);
+	float diff = max(dot(Normal, lightDir), 0.0);
+	vec3 diffuse = diff * lightCol;
+	//vec3 norm = FragColor.y;
+	//norm = min(1 - (abs(Normal.y * ObjPos.y) * 0.003), 0.00001);	
+
+	//vec3 diffuse = diff * lightCol;
+	FragColor = vec4(vec3(texel.r, texel.g, texel.b)/* * (ambient + diffuse)*/, 1);
+}
