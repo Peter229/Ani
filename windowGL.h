@@ -30,5 +30,6 @@ private:
 
 	static GLboolean Keys[1024];
 	static double mousePos[2];
+	static bool mouseState;
 	static GLFWwindow* window;
 };

@@ -9,17 +9,78 @@ hud::hud(glm::mat4 model) {
 }
 
 void hud::render(Shader *shader) {
-	glBindVertexArray(VAO);
-	glBindTexture(GL_TEXTURE_2D, Resource_Manager::getTexture("font"));
-	shader->setMat4("model", model);
-	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glDrawArrays(GL_TRIANGLES, 0, hudVerts.size());
+	if (VAO != 0) {
+		glBindVertexArray(VAO);
+		glBindTexture(GL_TEXTURE_2D, Resource_Manager::getTexture("font"));
+		shader->setMat4("model", model);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, hudVerts.size());
+	}
+	if (menuVAO != 0) {
+		glBindVertexArray(menuVAO);
+		glBindTexture(GL_TEXTURE_2D, Resource_Manager::getTexture("textures"));
+		shader->setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, menuVerts.size());
+	}
 }
 
 void hud::cleanUp() {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	if (VAO != 0 || VBO != 0) {
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		VAO = 0;
+		VBO = 0;
+	}
 	//glDeleteBuffers(1, &EBO);
+}
+
+void hud::cleanUpMenu() {
+	if (menuVAO != 0 || menuVBO != 0) {
+		glDeleteVertexArrays(1, &menuVAO);
+		glDeleteBuffers(1, &menuVBO);
+		menuVAO = 0;
+		menuVBO = 0;
+	}
+}
+
+void hud::drawTextures() {
+
+	int amountOfTextures = (sizeOfTextureImage * sizeOfTextureImage) / (sizeOfTexture * sizeOfTexture);
+
+	float posX = -18.0f;
+	float posY = -5.0f;
+	float gap = 1.0f;
+
+	for (int i = 0; i < amountOfTextures; i++) {
+
+		int texturePos = i;
+		int imagesPerRow = sizeOfTextureImage / sizeOfTexture;
+		int horiz = texturePos % imagesPerRow;
+		int verti = floor(texturePos / imagesPerRow);
+		float horizInImage = (float)horiz / imagesPerRow;
+		float vertiInImage = (float)verti / imagesPerRow;
+		float increment = (float)sizeOfUI / sizeOfTextureImage;
+
+		Vertex2D v1 = { glm::vec2((-0.5f * scaleTexture) + posX + (i * gap), (-0.5f * scaleTexture) + posY), glm::vec2(horizInImage, vertiInImage) }; //Top left
+		Vertex2D v2 = { glm::vec2((0.5f * scaleTexture) + posX + (i * gap), (0.5f * scaleTexture) + posY), glm::vec2(horizInImage + increment, vertiInImage - increment) }; //Bottom right
+		Vertex2D v3 = { glm::vec2((0.5f * scaleTexture) + posX + (i * gap), (-0.5f * scaleTexture) + posY), glm::vec2(horizInImage + increment, vertiInImage) }; //Top right
+		Vertex2D v4 = { glm::vec2((-0.5f * scaleTexture) + posX + (i * gap), (0.5f * scaleTexture) + posY), glm::vec2(horizInImage, vertiInImage - increment) }; //Bottom left
+		
+		menuVerts.push_back(v1);
+		menuVerts.push_back(v3);
+		menuVerts.push_back(v2);
+		menuVerts.push_back(v1);
+		menuVerts.push_back(v2);
+		menuVerts.push_back(v4);
+	}
+
+	cleanUpMenu();
+	genMenuVAO();
+}
+
+int hud::checkCollision(double xpos, double ypos) {
+
+
 }
 
 void hud::drawCrosshair() {
@@ -56,9 +117,12 @@ void hud::drawCrosshair() {
 void hud::drawString(std::string string, float posx, float posy) {
 	std::vector<char> chars;
 	std::vector<int> charToInt;
+
+	std::vector<Vertex2D> tempVerts;
+
 	for (int i = 0; i < string.length(); i++) {
 
-		std::vector<Vertex2D> tempVerts;
+		//std::vector<Vertex2D> tempVerts;
 
 		//std::cout << i << "\n";
 		chars.push_back(string.at(i));
@@ -90,9 +154,9 @@ void hud::drawString(std::string string, float posx, float posy) {
 		tempVerts.push_back(v1);
 		tempVerts.push_back(v2);
 		tempVerts.push_back(v4);
-
-		hudParts.push_back(tempVerts);
 	}
+
+	hudParts.push_back(tempVerts);
 	
 	//cleanUp();
 	//genVAO();
@@ -119,6 +183,23 @@ void hud::genVAO() {
 	glEnableVertexAttribArray(1);
 }
 
+void hud::genMenuVAO() {
+
+	glGenVertexArrays(1, &menuVAO);
+	glGenBuffers(1, &menuVBO);
+
+	glBindVertexArray(menuVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex2D) * menuVerts.size(), &menuVerts[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+}
+
 void hud::compileHud() {
 
 	hudVerts.clear();
@@ -130,22 +211,27 @@ void hud::compileHud() {
 		hudVerts.insert(hudVerts.end(), hudParts[i].begin(), hudParts[i].end());
 	}
 
-	genVAO();
+	if (hudVerts.size() > 0) {
+		genVAO();
+	}
 }
 
 void hud::removeHudPart(int p) {
 
-	hudVerts.clear();
+	//hudVerts.clear();
 
-	cleanUp();
+	//cleanUp();
 
-	std::vector<std::vector<Vertex2D>> tempHudParts;
+	hudParts.erase(hudParts.begin() + p);
+
+	/*std::vector<std::vector<Vertex2D>> tempHudParts;
 	std::vector<Vertex2D> tempVerts;
 
 	for (int i = 0; i < hudParts.size(); i++) {
 
 		if (i == p) {
 			//Do nothing
+			
 		}
 		else {
 			tempVerts.insert(tempVerts.end(), hudParts[i].begin(), hudParts[i].end());
@@ -156,5 +242,9 @@ void hud::removeHudPart(int p) {
 	}
 
 	hudParts.clear();
-	hudParts = tempHudParts;
+	hudParts = tempHudParts;*/
+
+	//cleanUp();
+	//genVAO();
+	compileHud();
 }

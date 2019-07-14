@@ -253,60 +253,38 @@ float Brush::rayAABBf(glm::vec3 orig, glm::vec3 dir) {
 
 void Brush::moveBrush(int dir) {
 
+	glm::vec3 movePos = glm::vec3(0.0f);
+
 	if (dir == 0) { //Up
-		pos += glm::vec3(1.0f, 0.0f, 0.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(1.0f, 0.0f, 0.0f);
 	}
 	else if (dir == 1) { //Down
-		pos += glm::vec3(-1.0f, 0.0f, 0.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(-1.0f, 0.0f, 0.0f);
 	}
 	else if (dir == 2) { //Left
-		pos += glm::vec3(0.0f, 0.0f, -1.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(0.0f, 0.0f, -1.0f);
 	}
 	else if (dir == 3) { //Right
-		pos += glm::vec3(0.0f, 0.0f, 1.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(0.0f, 0.0f, 1.0f);
 	}
 	else if (dir == 4) { //VUp
-		pos += glm::vec3(0.0f, 1.0f, 0.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(0.0f, 1.0f, 0.0f);
 	}
 	else if (dir == 5){ //VDown
-		pos += glm::vec3(0.0f, -1.0f, 0.0f);
-		createBrush(pos, add);
+		movePos = glm::vec3(0.0f, -1.0f, 0.0f);
 	}
-	else if (dir == 6) { //Up
-		add += glm::vec3(1.0f, 0.0f, 0.0f);
-		createBrush(pos, add);
+
+	for (int i = 0; i < verts.size(); i++) {
+		verts[i].pos += movePos;
 	}
-	else if (dir == 7) { //Down
-		if (add.x + pos.x > pos.x + 1.0f) {
-			add += glm::vec3(-1.0f, 0.0f, 0.0f);
-			createBrush(pos, add);
-		}
-	}
-	else if (dir == 8) { //Left
-		if (add.z + pos.z > pos.z + 1.0f) {
-			add += glm::vec3(0.0f, 0.0f, -1.0f);
-			createBrush(pos, add);
-		}
-	}
-	else if (dir == 9) { //Right
-		add += glm::vec3(0.0f, 0.0f, 1.0f);
-		createBrush(pos, add);
-	}
-	else if (dir == 10) { //VUp
-		add += glm::vec3(0.0f, 1.0f, 0.0f);
-		createBrush(pos, add);
-	}
-	else if (dir == 11) { //VDown
-		if (add.y + pos.y > pos.y + 1.0f) {
-			add += glm::vec3(0.0f, -1.0f, 0.0f);
-			createBrush(pos, add);
-		}
-	}
+
+	pos += movePos;
+
+	minPos = pos;
+	maxPos = pos + add;
+
+	cleanUp();
+	genVAO();
 }
 
 void Brush::rotateBrush(int axis, int dir) {
@@ -378,7 +356,7 @@ bool Brush::findTri(const glm::vec3 &orig, const glm::vec3 &dir) {
 
 	glm::vec3 point = orig + (dir * distance);
 
-	glm::vec3 f1 = p1.pos - point;
+	/*glm::vec3 f1 = p1.pos - point;
 	glm::vec3 f2 = p2.pos - point;
 	glm::vec3 f3 = p3.pos - point;
 
@@ -386,8 +364,9 @@ bool Brush::findTri(const glm::vec3 &orig, const glm::vec3 &dir) {
 	float a1 = glm::length(glm::cross(f2, f3)) / a;
 	float a2 = glm::length(glm::cross(f3, f1)) / a;
 	float a3 = glm::length(glm::cross(f1, f2)) / a;
+	*/
 
-	glm::vec2 uv = p1.tex * a1 + p2.tex * a2 + p3.tex * a3;
+	glm::vec2 uv = calcUVs(p1, p2, p3, point);
 
 	Vertex3D newVert = { point, p1.normal, uv };
 
@@ -430,9 +409,11 @@ bool Brush::findVertex(const glm::vec3 &orig, const glm::vec3 &dir, int move) {
 
 	glm::vec3 point = orig + (dir * distance);
 
-	float closeDis = 0.8f;
+	float closeDis = 0.4f;
 
 	bool found = false;
+
+	Vertex3D delVerts[3];
 
 	for (int i = 0; i < verts.size(); i++) {
 		if (fabs(point.x) - fabs(verts[i].pos.x) < closeDis && fabs(point.x) - fabs(verts[i].pos.x) > -closeDis) {
@@ -444,20 +425,126 @@ bool Brush::findVertex(const glm::vec3 &orig, const glm::vec3 &dir, int move) {
 					}else if (move == 1) {
 						verts[i].pos.y -= 1.0f;
 					}
+					else if (move == 2) {
+						verts[i].pos.x += 1.0f;
+					}
+					else if (move == 3) {
+						verts[i].pos.x -= 1.0f;
+					}
+					else if (move == 4) {
+						verts[i].pos.z += 1.0f;
+					}
+					else if (move == 5) {
+						verts[i].pos.z -= 1.0f;
+					}
+					else if (move == 66) {
+						if (verts[tri].pos == verts[i].pos) {
+							for (int h = 0; h < 3; h++) {
+								if (delVerts[1].pos == verts[tri + 1].pos || delVerts[1].pos == verts[tri + 2].pos) {
+
+								}
+							}
+							delVerts[1] = verts[tri + 1];
+							delVerts[2] = verts[tri + 2];
+						}else if(verts[tri + 1].pos == verts[i].pos) {
+							delVerts[0] = verts[tri + 0];
+							delVerts[2] = verts[tri + 2];
+						}
+						else if (verts[tri + 2].pos == verts[i].pos) {
+							delVerts[0] = verts[tri + 0];
+							delVerts[1] = verts[tri + 1];
+						}
+					}
 				}
 			}
 		}
 	}
 
 	if (found) {
+		calculateAvgNormals();
 		cleanUp();
 		genVAO();
-
 		return true;
 	}
 	else {
 		return false;
 	}
+}
+
+void Brush::reCalculateNormals() {
+
+	for (int i = 0; i < verts.size(); i += 3) {
+		glm::vec3 norm = glm::normalize(glm::cross(verts[i + 2].pos - verts[i].pos, verts[i + 1].pos - verts[i].pos));
+		verts[i].normal = norm;
+		verts[i + 1].normal = norm;
+		verts[i + 2].normal = norm;
+	}
+}
+
+void Brush::calculateAvgNormals() {
+
+	reCalculateNormals();
+
+	std::vector<Vertex3D> tempVerts;
+	std::vector<int> vertID;
+	int numVerts;
+
+	bool found = false;
+
+	for (int i = 0; i < verts.size(); i++) {
+		found = false;
+		for (int j = 0; j < tempVerts.size(); j++) {
+			if (verts[i].pos == tempVerts[j].pos) {
+				found = true;
+			}
+		}
+		if (!found) {
+			tempVerts.push_back(verts[i]);
+		}
+	}
+
+	for (int j = 0; j < tempVerts.size(); j++) {
+		numVerts = 0;
+		vertID.clear();
+		for (int i = 0; i < verts.size(); i++) {
+			if (tempVerts[j].pos == verts[i].pos) {
+				if (glm::dot(tempVerts[j].normal, verts[i].normal) > 0.5) {
+					vertID.push_back(i);
+					numVerts++;
+				}
+			}
+		}
+
+		glm::vec3 avgNormal = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		for (int y = 0; y < vertID.size(); y++) {
+
+			avgNormal += verts[vertID[y]].normal;
+		}
+
+		avgNormal = glm::normalize(avgNormal / ((float)numVerts));
+
+		for (int z = 0; z < vertID.size(); z++) {
+
+			verts[vertID[z]].normal = avgNormal;
+		}
+	}
+}
+
+glm::vec2 Brush::calcUVs(Vertex3D p0, Vertex3D p1, Vertex3D p2, glm::vec3 point) {
+
+	glm::vec3 f1 = p0.pos - point;
+	glm::vec3 f2 = p1.pos - point;
+	glm::vec3 f3 = p2.pos - point;
+
+	float a = glm::length(glm::cross(p0.pos - p1.pos, p0.pos - p2.pos));
+	float a1 = glm::length(glm::cross(f2, f3)) / a;
+	float a2 = glm::length(glm::cross(f3, f1)) / a;
+	float a3 = glm::length(glm::cross(f1, f2)) / a;
+
+	glm::vec2 uv = p0.tex * a1 + p1.tex * a2 + p2.tex * a3;
+
+	return uv;
 }
 
 void Brush::triAABB(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel, glm::vec3 *translation) {

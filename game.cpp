@@ -13,7 +13,9 @@ void Game::start(int windowWidth, int windowHeight) {
 	this->windowWidth = windowWidth;
 	this->windowHeight = windowHeight;
 
-	m1 = shaderVersion = shift = r = del = up = down = vup = vdown = left = right = del = walk = walkToggle = ctrl = space = one = two = false;
+	m1 = shaderVersion = shift = r = del = up = down = vup = vdown = left = right = del = walk = walkToggle = ctrl = space = v = cameraPos = tab = mouseEnable = false;
+
+	endMouse = startMouse = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	move = 0;
 
@@ -29,7 +31,7 @@ void Game::start(int windowWidth, int windowHeight) {
 
 	//Load Textures
 	Resource_Manager::loadTexture("Textures/grass.png", "tex", 1);
-	Resource_Manager::loadTexture("Textures/stone.png", "stone", 1);
+	Resource_Manager::loadTexture("Textures/textures.png", "textures", 1);
 	Resource_Manager::loadTexture("Textures/font.png", "font", 1);
 	Resource_Manager::loadTexture("Textures/crosshair.png", "crosshair", 1);
 	Resource_Manager::loadTexture("Textures/DCrosshair.png", "DCrosshair", 1);
@@ -40,6 +42,7 @@ void Game::start(int windowWidth, int windowHeight) {
 
 	huddy->drawString("Top 5 Bruh Moments", -38.0f, -10.5f);
 	huddy->drawCrosshair();
+	huddy->drawTextures();
 
 	bob = new MD5Model();
 	bob->LoadModel("boblampclean.md5mesh");
@@ -72,67 +75,84 @@ void Game::update(GLboolean* Keys, double* mousePos, float deltaTime) {
 	double xpos = mousePos[0];
 	double ypos = mousePos[1];
 
-	if (firstMouse) {
+	if (!mouseEnable) {
+		if (firstMouse) {
+
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos;
 
 		lastX = xpos;
 		lastY = ypos;
-		firstMouse = false;
+
+		camera->ProcessMouseMovement(xoffset, yoffset);
+
+		//Mouse Buttons
+		if (Keys[GLFW_MOUSE_BUTTON_LEFT] == GLFW_PRESS && m1 == false) {
+			if (shift) {
+				float t = rayPlaneIntersection(camera->Front, camera->Position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				startMouse = camera->Position + (camera->Front * t);
+				startMouse.x = floor(startMouse.x);
+				startMouse.y = floor(startMouse.y);
+				startMouse.z = floor(startMouse.z);
+				//level->createBrush(bPos);
+			}
+			else if (ctrl) {
+				level->findTri(camera->Position, camera->Front);
+			}
+			else if (space) {
+				level->findVertex(camera->Position, camera->Front, move);
+			}
+			else {
+				level->findBrushes(camera->Front, camera->Position);
+			}
+			m1 = true;
+		}
+		if (m1 == true) {
+			if (Keys[GLFW_MOUSE_BUTTON_LEFT] == GLFW_RELEASE) {
+				m1 = false;
+				if (shift) {
+					float t = rayPlaneIntersection(camera->Front, camera->Position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+					endMouse = camera->Position + (camera->Front * t);
+					endMouse.x = floor(endMouse.x);
+					endMouse.y = floor(endMouse.y);
+					endMouse.z = floor(endMouse.z);
+					level->createBrush(startMouse, glm::vec3(endMouse.x - startMouse.x, 1.0f, endMouse.z - startMouse.z));
+				}
+			}
+		}
 	}
-
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos;
-
-	lastX = xpos;
-	lastY = ypos;
-
-	camera->ProcessMouseMovement(xoffset, yoffset);
-
-	//Mouse Buttons
-	if (Keys[GLFW_MOUSE_BUTTON_LEFT] == GLFW_PRESS && m1 == false) {
-		if (shift) {
-			float t = rayPlaneIntersection(camera->Front, camera->Position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::vec3 bPos = camera->Position + (camera->Front * t);
-			bPos.x = floor(bPos.x);
-			bPos.y = floor(bPos.y);
-			bPos.z = floor(bPos.z);
-			level->createBrush(bPos);
-		}
-		else if (ctrl) {
-			level->findTri(camera->Position, camera->Front);
-		}
-		else if (space) {
-			level->findVertex(camera->Position, camera->Front, move);
-		}
-		else {
-			level->findBrushes(camera->Front, camera->Position);
-		}
-		m1 = true;
-	}
-	if (m1 == true) {
-		if (Keys[GLFW_MOUSE_BUTTON_LEFT] == GLFW_RELEASE) {
-			m1 = false;
-		}
+	else {
+		firstMouse = true;
+		//std::cout << xpos << " " << ypos << "\n";
 	}
 
 	//KeyBoard Inputs
 	if (walk) {
 		if (Keys[GLFW_KEY_W] == GLFW_PRESS) {
-			keyQueue.push_back(0);
+			player->move(0);
 		}
 		if (Keys[GLFW_KEY_S] == GLFW_PRESS) {
-			keyQueue.push_back(1);
+			player->move(1);
 		}
 		if (Keys[GLFW_KEY_A] == GLFW_PRESS) {
-			keyQueue.push_back(2);
+			player->move(2);
 		}
 		if (Keys[GLFW_KEY_D] == GLFW_PRESS) {
-			keyQueue.push_back(3);
+			player->move(3);
 		}
 		if (Keys[GLFW_KEY_E] == GLFW_PRESS) {
-			keyQueue.push_back(4);
+			player->move(4);
 		}
 		if (Keys[GLFW_KEY_Q] == GLFW_PRESS) {
-			keyQueue.push_back(5);
+			player->move(5);
+		}
+		if (Keys[GLFW_KEY_SPACE] == GLFW_PRESS) {
+			player->move(6);
 		}
 	}
 	else {
@@ -243,12 +263,44 @@ void Game::update(GLboolean* Keys, double* mousePos, float deltaTime) {
 		space = false;
 	}
 
-	if (Keys[GLFW_KEY_1] == GLFW_PRESS && one == false) {
+	if (Keys[GLFW_KEY_1] == GLFW_PRESS) {
 		move = 0;
 	}
 
-	if (Keys[GLFW_KEY_2] == GLFW_PRESS && two == false) {
+	if (Keys[GLFW_KEY_2] == GLFW_PRESS) {
 		move = 1;
+	}
+
+	if (Keys[GLFW_KEY_3] == GLFW_PRESS) {
+		move = 2;
+	}
+
+	if (Keys[GLFW_KEY_4] == GLFW_PRESS) {
+		move = 3;
+	}
+
+	if (Keys[GLFW_KEY_5] == GLFW_PRESS) {
+		move = 4;
+	}
+
+	if (Keys[GLFW_KEY_6] == GLFW_PRESS) {
+		move = 5;
+	}
+
+	if (Keys[GLFW_KEY_V] == GLFW_PRESS && v == false) {
+		cameraPos = !cameraPos;
+		v = true;
+	}
+	if (Keys[GLFW_KEY_V] == GLFW_RELEASE && v == true) {
+		v = false;
+	}
+
+	if (Keys[GLFW_KEY_TAB] == GLFW_PRESS && tab == false) {
+		mouseEnable = !mouseEnable;
+		tab = true;
+	}
+	if (Keys[GLFW_KEY_TAB] == GLFW_RELEASE && tab == true) {
+		tab = false;
 	}
 
 	logic();
@@ -269,16 +321,20 @@ void Game::tick() {
 
 	player->updateYaw(camera->Yaw);
 
-	for (int i = 0; i < keyQueue.size(); i++) {
-		player->move(keyQueue[i]);
-	}
+	//for (int i = 0; i < keyQueue.size(); i++) {
+		//player->move();
+	//}
 
-	keyQueue.clear();
+	//keyQueue.clear();
 
-	//player->checkCollision(level);
+	player->checkCollision(level);
 }
 
 void Game::render() {
+
+	if (cameraPos) {
+		camera->Position = player->getPos();
+	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.2f, 0.2f, 0.9f, 1.0f);
@@ -349,6 +405,7 @@ void Game::cleanUp() {
 	Resource_Manager::clearData();
 
 	huddy->cleanUp();
+	huddy->cleanUpMenu();
 	level->cleanUp();
 	player->cleanUp();
 	shadowMap->cleanUp();

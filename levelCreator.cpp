@@ -149,7 +149,7 @@ void levelCreator::rotateBrush(int axis, int dir) {
 	}
 }
 
-glm::vec3 levelCreator::playerCollision(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel) {
+glm::vec3 levelCreator::playerCollision(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel, bool *grounded, glm::vec3 *velout) {
 
 	//for (int i = 0; i < brushes.size(); i++) {
 
@@ -162,6 +162,9 @@ glm::vec3 levelCreator::playerCollision(glm::vec3 boxCenter, glm::vec3 boxHalfSi
 	cp.w_Velocity = vel;
 
 	glm::vec3 posF = Collision::CollisionSlide(cp, verts);
+
+	*grounded = cp.grounded;
+	*velout = cp.w_Velocity;
 
 	return posF;
 }

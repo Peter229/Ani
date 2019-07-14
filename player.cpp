@@ -6,7 +6,8 @@ Player::Player() {
 	maxPos = glm::vec3(1.0f, 2.0f, 1.0f);
 	vel = glm::vec3(0.0f);
 	pos = glm::vec3(4.0f, 10.0f, 4.0f);
-	speed = 0.004;
+	speed = 0.002;
+	grounded = false;
 }
 
 Player::~Player() {
@@ -143,22 +144,35 @@ void Player::move(int key) {
 	// 0 Up 1 Down 2 left 3 Right
 	switch (key) {
 	case 0:
-		vel += dir * speed;
+		if (grounded) {
+			vel += dir * speed;
+		}
 		break;
 	case 1:
-		vel -= dir * speed;
+		if (grounded) {
+			vel -= dir * speed;
+		}
 		break;
 	case 2:
-		vel -= right * speed;
+		if (grounded) {
+			vel -= right * speed;
+		}
 		break;
 	case 3:
-		vel += right * speed;
+		if (grounded) {
+			vel += right * speed;
+		}
 		break;
 	case 4:
 		pos.y += speed;
 		break;
 	case 5:
 		pos.y -= speed;
+		break;
+	case 6:
+		if (grounded) {
+			vel.y = 0.98f;
+		}
 		break;
 	}
 }
@@ -176,9 +190,7 @@ void Player::updateYaw(float offset) {
 
 void Player::checkCollision(levelCreator* level) {
 
-	glm::vec3 translate = glm::vec3(0.0f, 0.0f, 0.0f);
-
-	pos = level->playerCollision(pos, glm::vec3(1.0f, 2.0f, 1.0f), vel);
+	pos = level->playerCollision (pos, glm::vec3(1.0f, 2.0f, 1.0f), vel, &grounded, &vel);
 
 	/*float closeDis = 0.5f;
 
@@ -206,7 +218,30 @@ void Player::checkCollision(levelCreator* level) {
 		pos += vel;
 	}*/
 
-	vel = glm::vec3(0.0f);
+	glm::vec3 airFriction = glm::vec3(1.01f);
+	glm::vec3 groundFriction = glm::vec3(1.5f, 1.0f, 1.5f);
+
+	if (grounded) {
+		vel /= groundFriction;
+	}
+	else {
+		vel /= airFriction;
+	}
+	float close = 0.002f;
+	if (fabs(vel.x) < close) {
+		vel.x = 0;
+	}
+	if (fabs(vel.z) < close) {
+		vel.z = 0;
+	}
+	if (fabs(vel.y) < close) {
+		vel.y = 0;
+	}
+}
+
+void Player::setGrounded(bool grounded) {
+
+	this->grounded = grounded;
 }
 
 void Player::cleanUp() {
@@ -218,6 +253,11 @@ void Player::cleanUp() {
 glm::vec3 Player::getPos() {
 
 	return pos;
+}
+
+void Player::setPos(glm::vec3 pos) {
+
+	this->pos = pos;
 }
 
 void Player::genVAO() {

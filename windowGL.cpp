@@ -3,6 +3,7 @@
 double WindowGL::mousePos[2] = { SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f };
 GLboolean WindowGL::Keys[1024];
 GLFWwindow* WindowGL::window;
+bool WindowGL::mouseState = false;
 
 int WindowGL::start() {
 
@@ -74,6 +75,18 @@ void WindowGL::key_callback(GLFWwindow* window, int key, int scancode, int actio
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+	if (key == GLFW_KEY_TAB && action == GLFW_RELEASE) {
+		mouseState = !mouseState;
+		if (mouseState == true) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+	}
+	if (key == GLFW_KEY_TAB && action == GLFW_RELEASE) {
+		
 	}
 	if (key >= 0 && key < 1024) {
 		if (action == GLFW_PRESS) {

@@ -19,13 +19,15 @@ public:
 	void checkCollision(levelCreator* level);
 	void cleanUp();
 	glm::vec3 getPos();
-	glm::vec3 pos;
+	void setPos(glm::vec3 pos);
+	void setGrounded(bool grounded);
+
 private:
 	unsigned int VAO, VBO;
 	glm::vec3 minPos, maxPos;
-	glm::vec3 vel, dir, right;
+	glm::vec3 vel, dir, right, pos;
 	float yaw, speed, friction;
 	std::vector<Vertex3D> verts;
-
+	bool grounded;
 	void genVAO();
 };

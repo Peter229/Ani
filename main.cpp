@@ -35,11 +35,6 @@ int main() {
 			lastTimeA += 1.0;
 		}
 
-		/*
-		if (cam) {
-			camera.Position = player->getPos() + glm::vec3(0.0f, 2.0f, 0.0f);
-		}*/
-
 		//Delta Time To Get How Fast The Game Should Run
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;

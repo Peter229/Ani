@@ -41,6 +41,6 @@ private:
 	bool firstMouse;
 	double lastX, lastY;
 	int windowWidth, windowHeight, dir, move;
-	bool m1, shift, shaderVersion, r, up, down, vup, vdown, left, right, del, walk, walkToggle, ctrl, space, one, two;
-	std::vector<int> keyQueue;
+	bool m1, shift, shaderVersion, r, up, down, vup, vdown, left, right, del, walk, walkToggle, ctrl, space, v, cameraPos, tab, mouseEnable;
+	glm::vec3 startMouse, endMouse;
 };

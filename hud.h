@@ -15,9 +15,12 @@ public:
 	hud(glm::mat4 model);
 	void render(Shader *shader);
 	void cleanUp();
+	void cleanUpMenu();
 	void drawCrosshair();
 	void drawString(std::string string, float posx, float posy);
+	void drawTextures();
 	void removeHudPart(int p);
+	int checkCollision(double xpos, double ypos);
 
 private:
 	float verticesPlane[16] = {
@@ -33,9 +36,16 @@ private:
 	std::vector<Vertex2D> hudVerts;
 	std::vector<std::vector<Vertex2D>> hudParts;
 
-	unsigned int VAO, VBO;// , EBO;
+	std::vector<Vertex2D> menuVerts;
+
+	unsigned int VAO, VBO, menuVAO, menuVBO;// , EBO;
 	glm::mat4 model;
 	void genVAO();
+	void genMenuVAO();
+
+	float sizeOfTextureImage = 24;
+	float sizeOfTexture = 8;
+	float scaleTexture = 1.0f;
 
 	float sizeOfFontImage = 128.0f;
 	float sizeOfFontLetterX = 8.0f;

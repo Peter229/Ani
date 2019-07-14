@@ -22,6 +22,7 @@ struct CollisionPacket {
 	float nearestDistance;
 	glm::vec3 intersectionPoint;
 	bool grounded;
+	bool grav;
 	int collisionRecursionDepth;
 };
 

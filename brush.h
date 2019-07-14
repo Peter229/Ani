@@ -27,6 +27,9 @@ public:
 	void triAABB(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel, glm::vec3 *translation);
 	bool findTri(const glm::vec3 &orig, const glm::vec3 &dir);
 	bool findVertex(const glm::vec3 &orig, const glm::vec3 &dir, int move);
+	void reCalculateNormals();
+	void calculateAvgNormals();
+	glm::vec2 calcUVs(Vertex3D p0, Vertex3D p1, Vertex3D p2, glm::vec3 point);
 
 private:
 	unsigned int VAO, VBO;

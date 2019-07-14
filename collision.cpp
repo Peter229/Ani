@@ -42,11 +42,13 @@ glm::vec3 Collision::CollisionSlide(CollisionPacket& cP, std::vector<Vertex3D>& 
 	cP.e_Velocity = cP.w_Velocity / cP.ellipsoidSpace;
 	cP.e_Position = cP.w_Position / cP.ellipsoidSpace;
 	cP.grounded = false;
+	cP.grav = false;
 	cP.collisionRecursionDepth = 0;
 	glm::vec3 finalPosition = CollideWithWorld(cP, vertPos);
 
-	cP.e_Velocity = glm::vec3(0.0f, -0.4f, 0.0f) / cP.ellipsoidSpace;
+	cP.e_Velocity = glm::vec3(0.0f, -0.8f, 0.0f) / cP.ellipsoidSpace;
 	cP.e_Position = finalPosition;
+	cP.grav = true;
 	cP.collisionRecursionDepth = 0;
 	finalPosition = CollideWithWorld(cP, vertPos);
 
@@ -142,6 +144,10 @@ glm::vec3 Collision::CollideWithWorld(CollisionPacket& cP, std::vector<Vertex3D>
 	glm::vec3 newVelocityVector = newDestinationPoint - cP.intersectionPoint;
 
 	if (glm::length(newVelocityVector) < veryCloseDistance) {
+		return newPosition;
+	}
+
+	if (cP.grounded) {
 		return newPosition;
 	}
 
@@ -346,14 +352,16 @@ bool Collision::SphereCollidingWithTriangle(CollisionPacket& cP, glm::vec3 &p0, 
 
 				//glm::vec3 dir = glm::cross(p1 - p0, p2 - p0);
 				//glm::vec3 norm = glm::normalize(dir);
-
-				float diff = 1 - abs(triNormal.y);
-				if (diff < 0.02) {
-					cP.grounded = true;
-					//std::cout << diff << "\n";
-				}
-				else {
-					cP.grounded = false;
+				if (cP.grav) {
+					float maxSteep = 0.91f;
+					//std::cout << glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), triNormal) << "\n";
+					if (glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), triNormal) > maxSteep) {
+						cP.grounded = true;
+						//std::cout << diff << "\n";
+					}
+					else {
+						cP.grounded = false;
+					}
 				}
 
 				cP.nearestDistance = distToCollision;

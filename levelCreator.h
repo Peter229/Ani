@@ -2,7 +2,6 @@
 
 #include "brush.h"
 
-
 class levelCreator {
 
 public:
@@ -19,7 +18,7 @@ public:
 	void findBrushes(glm::vec3 dir, glm::vec3 orig);
 	void editBrush(int dir);
 	void rotateBrush(int axis, int dir);
-	glm::vec3 playerCollision(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel);
+	glm::vec3 playerCollision(glm::vec3 boxCenter, glm::vec3 boxHalfSize, glm::vec3 vel, bool *grounded, glm::vec3 *velout);
 	void findTri(const glm::vec3 &orig, const glm::vec3 &dir);
 	void findVertex(const glm::vec3 &orig, const glm::vec3 &dir, int move);
 
