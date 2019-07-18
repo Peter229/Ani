@@ -1,5 +1,6 @@
 #pragma once
 
+#include "windowGL.h"
 #include "includesGL.h"
 
 #include "shader.h"
@@ -16,7 +17,9 @@ public:
 	Game();
 	~Game();
 
-	void start(int windowWidth, int windowHeight);
+	void start();
+
+	void loop();
 
 	void update(GLboolean* Keys, double* mousePos, float deltaTime);
 	void logic();
@@ -43,4 +46,14 @@ private:
 	int windowWidth, windowHeight, dir, move;
 	bool m1, shift, shaderVersion, r, up, down, vup, vdown, left, right, del, walk, walkToggle, ctrl, space, v, cameraPos, tab, mouseEnable;
 	glm::vec3 startMouse, endMouse;
+
+	float deltaTime;
+	float lastFrame;
+
+	float deltaTimeT;
+	float deltaTime2;
+	double lastTimeA;
+	double lastTimeB;
+	int nbFrames;
+
 };

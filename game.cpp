@@ -8,10 +8,23 @@ Game::~Game() {
 
 }
 
-void Game::start(int windowWidth, int windowHeight) {
+void Game::start() {
 
-	this->windowWidth = windowWidth;
-	this->windowHeight = windowHeight;
+	if (WindowGL::start() == -1) {
+		std::cout << "Failed to create window\n";
+	}
+
+	deltaTime = 0.0f;
+	lastFrame = 0.0f;
+
+	deltaTimeT = 0;
+	deltaTime2 = 0;
+	lastTimeA = glfwGetTime();
+	lastTimeB = glfwGetTime();
+	nbFrames = 0;
+
+	this->windowWidth = SCR_WIDTH;
+	this->windowHeight = SCR_HEIGHT;
 
 	m1 = shaderVersion = shift = r = del = up = down = vup = vdown = left = right = del = walk = walkToggle = ctrl = space = v = cameraPos = tab = mouseEnable = false;
 
@@ -38,7 +51,7 @@ void Game::start(int windowWidth, int windowHeight) {
 	Resource_Manager::loadTexture("bob_head.png", "head", 0);
 	Resource_Manager::loadTexture("bob_body.png", "body", 0);
 
-	huddy = new hud(glm::mat4(1.0f));
+	huddy = new hud(glm::mat4(1.0f), windowWidth, windowHeight);
 
 	huddy->drawString("Top 5 Bruh Moments", -38.0f, -10.5f);
 	huddy->drawCrosshair();
@@ -67,6 +80,42 @@ void Game::start(int windowWidth, int windowHeight) {
 	shadowShader->setInt("shadowMap", 1);
 
 	camera = new Camera(glm::vec3(0.0f, 5.0f, 0.0f));
+}
+
+void Game::loop() {
+
+	while (!glfwWindowShouldClose(WindowGL::getWindow())) {
+
+		double currentTimeA = glfwGetTime();
+		nbFrames++;
+		if (currentTimeA - lastTimeA >= 1.0) {
+			printf("%f ms/frame\n%d Frames Per Second\n", 1000.0 / double(nbFrames), nbFrames);
+			nbFrames = 0;
+			lastTimeA += 1.0;
+		}
+
+		//Delta Time To Get How Fast The Game Should Run
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		//Get Inputs
+		WindowGL::update();
+
+		update(WindowGL::getKeys(), WindowGL::getMousePos(), deltaTime);
+
+		if (currentTimeA - lastTimeB >= 0.0166) { //Call physics 60 times a second
+
+			lastTimeB += 0.0166;
+
+			tick();
+		}
+
+		render();
+
+		//Go To Next Frame
+		glfwSwapBuffers(WindowGL::getWindow());
+	}
 }
 
 void Game::update(GLboolean* Keys, double* mousePos, float deltaTime) {
@@ -128,6 +177,9 @@ void Game::update(GLboolean* Keys, double* mousePos, float deltaTime) {
 	}
 	else {
 		firstMouse = true;
+		if (Keys[GLFW_MOUSE_BUTTON_LEFT] == GLFW_PRESS) {
+			huddy->checkCollision(xpos, ypos);
+		}
 		//std::cout << xpos << " " << ypos << "\n";
 	}
 
@@ -409,4 +461,6 @@ void Game::cleanUp() {
 	level->cleanUp();
 	player->cleanUp();
 	shadowMap->cleanUp();
+
+	WindowGL::end();
 }

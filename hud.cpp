@@ -1,7 +1,9 @@
 #include "hud.h"
 
-hud::hud(glm::mat4 model) {
+hud::hud(glm::mat4 model, int windowWidth, int windowHeight) {
 	//model = glm::translate(model, glm::vec3(-0.99f, 0.99f, 0.0));
+	this->windowHeight = windowHeight;
+	this->windowWidth = windowWidth;
 	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.006f * 9, 0.006f * 16, 1.0f));
 	this->model = model;
@@ -72,7 +74,10 @@ void hud::drawTextures() {
 		menuVerts.push_back(v1);
 		menuVerts.push_back(v2);
 		menuVerts.push_back(v4);
+		std::cout << menuVerts[i*6].pos.x << " " << menuVerts[i*6].pos.y << "\n";
 	}
+
+	//std::cout << menuVerts[0].pos.x << " " << menuVerts[0].pos.y << "\n";
 
 	cleanUpMenu();
 	genMenuVAO();
@@ -80,7 +85,15 @@ void hud::drawTextures() {
 
 int hud::checkCollision(double xpos, double ypos) {
 
+	float hudPosX = -((windowWidth / 2.0f) - xpos); //* 0.006f * 9;
+	float hudPosY = -((windowHeight / 2.0f)- ypos);// * 0.006f * 16;
 
+	hudPosX = hudPosX * (0.006f * 9.0f);
+	hudPosY = hudPosY * (0.006f * 16.0f);
+
+	std::cout << hudPosX << " " << hudPosY << "\n";
+
+	return 0;
 }
 
 void hud::drawCrosshair() {

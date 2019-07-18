@@ -12,7 +12,7 @@ struct Vertex2D {
 
 class hud {
 public:
-	hud(glm::mat4 model);
+	hud(glm::mat4 model, int windowWidth, int windowHeight);
 	void render(Shader *shader);
 	void cleanUp();
 	void cleanUpMenu();
@@ -53,6 +53,8 @@ private:
 	float sizeOfUI = 8.0f;
 	float scale = 0.06f;
 	float crossHairSize = 0.45f;
+	
+	int windowWidth, windowHeight;
 
 	void compileHud();
 };
